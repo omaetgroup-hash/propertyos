@@ -86,7 +86,7 @@ export default function TenantsPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive" | "prospect">("all");
   const [addOpen, setAddOpen] = useState(false);
 
-  const debouncedSearch = useDebounce(search, 300);
+  const [debouncedSearch] = useDebounce(search, 300);
   const tenants = useQuery(api.tenants.list, {});
 
   const filtered = (tenants ?? []).filter((t) => {

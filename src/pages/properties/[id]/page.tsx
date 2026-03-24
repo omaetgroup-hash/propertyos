@@ -36,7 +36,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils.ts";
 import { AU_STATES, NZ_REGIONS, formatCurrency, type Country } from "@/lib/locale.ts";
-import AddUnitDialog from "./_components/AddUnitDialog.tsx";
+import AddUnitDialog from "../_components/AddUnitDialog.tsx";
 
 function getRegionLabel(country: "nz" | "au", regionCode: string): string {
   const list = country === "au" ? AU_STATES : NZ_REGIONS;

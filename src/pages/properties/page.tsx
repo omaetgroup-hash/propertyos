@@ -24,7 +24,7 @@ export default function PropertiesPage() {
   const [countryFilter, setCountryFilter] = useState<"all" | "nz" | "au">("all");
   const [addOpen, setAddOpen] = useState(false);
 
-  const debouncedSearch = useDebounce(search, 300);
+  const [debouncedSearch] = useDebounce(search, 300);
   const properties = useQuery(api.properties.list, {});
 
   const filtered = (properties ?? []).filter((p) => {

@@ -10,6 +10,7 @@ import FinancialsPage from "./pages/financials/page.tsx";
 import UtilitiesPage from "./pages/utilities/page.tsx";
 import InspectionsPage from "./pages/inspections/page.tsx";
 import CompliancePage from "./pages/compliance/page.tsx";
+import PropertyDetailPage from "./pages/properties/[id]/page.tsx";
 import MapPage from "./pages/map/page.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -22,6 +23,7 @@ export default function App() {
           <Route element={<AppLayout />}>
             <Route path="/" element={<Index />} />
             <Route path="/properties" element={<PropertiesPage />} />
+            <Route path="/properties/:id" element={<PropertyDetailPage />} />
             <Route path="/tenants" element={<TenantsPage />} />
             <Route path="/leases" element={<LeasesPage />} />
             <Route path="/financials" element={<FinancialsPage />} />
