@@ -11,7 +11,7 @@ import {
   MapPin,
   ChevronRight,
   LogOut,
-  Settings,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils.ts";
 import { useAuth } from "@/hooks/use-auth.ts";
@@ -28,6 +28,7 @@ const navItems = [
   { label: "Inspections", href: "/inspections", icon: ClipboardCheck },
   { label: "Compliance", href: "/compliance", icon: ShieldCheck },
   { label: "Map View", href: "/map", icon: MapPin },
+  { label: "Reports", href: "/reports", icon: BarChart3 },
 ];
 
 export default function AppSidebar() {

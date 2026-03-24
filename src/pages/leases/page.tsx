@@ -39,10 +39,10 @@ const STATUS_CONFIG: Record<LeaseStatus, { label: string; className: string; ico
   terminated: { label: "Terminated", className: "bg-red-500/10 text-red-700", icon: <XCircle className="w-3 h-3" /> },
 };
 
-function LeaseCard({ lease }: { lease: ReturnType<typeof useQuery<typeof api.leases.list>>[number] }) {
+function LeaseCard({ lease }: { lease: NonNullable<ReturnType<typeof useQuery<typeof api.leases.list>>>[number] }) {
   const updateStatus = useMutation(api.leases.updateStatus);
   const removeLease = useMutation(api.leases.remove);
-  const config = STATUS_CONFIG[lease.status];
+  const config = STATUS_CONFIG[lease.status as LeaseStatus];
 
   async function changeStatus(status: LeaseStatus) {
     try {

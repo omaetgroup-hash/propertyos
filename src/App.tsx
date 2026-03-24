@@ -12,6 +12,7 @@ import InspectionsPage from "./pages/inspections/page.tsx";
 import CompliancePage from "./pages/compliance/page.tsx";
 import PropertyDetailPage from "./pages/properties/[id]/page.tsx";
 import MapPage from "./pages/map/page.tsx";
+import ReportsPage from "./pages/reports/page.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 export default function App() {
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/inspections" element={<InspectionsPage />} />
             <Route path="/compliance" element={<CompliancePage />} />
             <Route path="/map" element={<MapPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
