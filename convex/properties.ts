@@ -12,17 +12,30 @@ export const list = query({
       .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique();
     if (!user) return [];
-    return await ctx.db
+    const properties = await ctx.db
       .query("properties")
       .withIndex("by_owner", (q) => q.eq("ownerId", user._id))
       .collect();
+    return await Promise.all(
+      properties.map(async (p) => ({
+        ...p,
+        imageUrl: p.imageStorageId ? await ctx.storage.getUrl(p.imageStorageId) : null,
+      }))
+    );
   },
 });
 
 export const get = query({
   args: { id: v.id("properties") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    const property = await ctx.db.get(args.id);
+    if (!property) return null;
+    return {
+      ...property,
+      imageUrl: property.imageStorageId
+        ? await ctx.storage.getUrl(property.imageStorageId)
+        : null,
+    };
   },
 });
 

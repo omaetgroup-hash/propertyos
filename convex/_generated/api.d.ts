@@ -14,6 +14,7 @@ import type * as inspections from "../inspections.js";
 import type * as leases from "../leases.js";
 import type * as properties from "../properties.js";
 import type * as reports from "../reports.js";
+import type * as storage from "../storage.js";
 import type * as tenants from "../tenants.js";
 import type * as units from "../units.js";
 import type * as users from "../users.js";
@@ -32,6 +33,7 @@ declare const fullApi: ApiFromModules<{
   leases: typeof leases;
   properties: typeof properties;
   reports: typeof reports;
+  storage: typeof storage;
   tenants: typeof tenants;
   units: typeof units;
   users: typeof users;
