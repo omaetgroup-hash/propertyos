@@ -2,6 +2,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
 import {
   Building2,
   Users,
@@ -11,15 +12,16 @@ import {
   ClipboardCheck,
   TrendingUp,
   Home,
+  Flag,
 } from "lucide-react";
 import { cn } from "@/lib/utils.ts";
+import { formatCurrency } from "@/lib/locale.ts";
 
 type StatCardProps = {
   title: string;
   value: string | number;
   subtitle?: string;
   icon: React.ReactNode;
-  trend?: "up" | "down" | "neutral";
   accent?: string;
 };
 
@@ -49,17 +51,25 @@ function OccupancyBar({ rate }: { rate: number }) {
         <span className="text-muted-foreground">Occupancy Rate</span>
         <span className="font-semibold">{rate}%</span>
       </div>
-      <div className="h-2 bg-muted rounded-full overflow-hidden">
+      <div className="h-2.5 bg-muted rounded-full overflow-hidden">
         <div
           className={cn(
-            "h-full rounded-full transition-all",
-            rate >= 80 ? "bg-green-500" : rate >= 60 ? "bg-yellow-500" : "bg-destructive"
+            "h-full rounded-full transition-all duration-700",
+            rate >= 85
+              ? "bg-emerald-500"
+              : rate >= 70
+                ? "bg-yellow-500"
+                : "bg-destructive"
           )}
           style={{ width: `${rate}%` }}
         />
       </div>
       <p className="text-xs text-muted-foreground">
-        {rate >= 80 ? "Strong occupancy" : rate >= 60 ? "Moderate occupancy" : "Low occupancy — review vacancies"}
+        {rate >= 85
+          ? "Strong occupancy"
+          : rate >= 70
+            ? "Moderate occupancy — consider reviewing vacant units"
+            : "Low occupancy — action required"}
       </p>
     </div>
   );
@@ -89,17 +99,34 @@ export default function DashboardPage() {
     );
   }
 
-  const formatCurrency = (n: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+  // Use NZD for mixed/NZ-majority portfolios, AUD if AU-only
+  const portfolioCurrency = stats.auProperties > stats.nzProperties ? "au" : "nz";
 
   return (
     <div className="p-8 space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Overview of your property portfolio
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Overview of your property portfolio
+          </p>
+        </div>
+        {/* Portfolio country split */}
+        {stats.totalProperties > 0 && (
+          <div className="flex gap-2">
+            {stats.nzProperties > 0 && (
+              <Badge variant="secondary" className="gap-1.5 text-xs">
+                🇳🇿 {stats.nzProperties} NZ
+              </Badge>
+            )}
+            {stats.auProperties > 0 && (
+              <Badge variant="secondary" className="gap-1.5 text-xs">
+                🇦🇺 {stats.auProperties} AU
+              </Badge>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Stats grid */}
@@ -119,30 +146,34 @@ export default function DashboardPage() {
           accent="bg-indigo-500/10 text-indigo-600"
         />
         <StatCard
-          title="Active Leases"
+          title="Active Tenancies"
           value={stats.activeLeases}
-          subtitle="Current tenants"
+          subtitle="Current RTA agreements"
           icon={<Users className="w-5 h-5" />}
           accent="bg-violet-500/10 text-violet-600"
         />
         <StatCard
-          title="Monthly Revenue"
-          value={formatCurrency(stats.monthlyRevenue)}
-          subtitle="From active leases"
+          title="Weekly Rent Roll"
+          value={formatCurrency(stats.weeklyIncome, portfolioCurrency)}
+          subtitle={`≈ ${formatCurrency(stats.monthlyRevenue, portfolioCurrency)}/mth`}
           icon={<DollarSign className="w-5 h-5" />}
           accent="bg-emerald-500/10 text-emerald-600"
         />
         <StatCard
           title="Vacant Units"
           value={stats.vacantUnits}
-          subtitle="Available to lease"
+          subtitle="Available to let"
           icon={<DoorOpen className="w-5 h-5" />}
           accent="bg-amber-500/10 text-amber-600"
         />
         <StatCard
           title="Occupancy Rate"
           value={`${stats.occupancyRate}%`}
-          subtitle={stats.totalUnits > 0 ? `${stats.occupiedUnits} of ${stats.totalUnits} units` : "No units yet"}
+          subtitle={
+            stats.totalUnits > 0
+              ? `${stats.occupiedUnits} of ${stats.totalUnits} units`
+              : "No units yet"
+          }
           icon={<TrendingUp className="w-5 h-5" />}
           accent="bg-teal-500/10 text-teal-600"
         />
@@ -158,7 +189,11 @@ export default function DashboardPage() {
           value={stats.overdueCompliance}
           subtitle="Overdue or expired"
           icon={<AlertTriangle className="w-5 h-5" />}
-          accent={stats.overdueCompliance > 0 ? "bg-red-500/10 text-red-600" : "bg-green-500/10 text-green-600"}
+          accent={
+            stats.overdueCompliance > 0
+              ? "bg-red-500/10 text-red-600"
+              : "bg-green-500/10 text-green-600"
+          }
         />
       </div>
 
@@ -181,7 +216,13 @@ export default function DashboardPage() {
             <Building2 className="w-10 h-10 text-muted-foreground mx-auto" />
             <div>
               <p className="font-semibold">No properties yet</p>
-              <p className="text-sm text-muted-foreground">Add your first property to get started</p>
+              <p className="text-sm text-muted-foreground">
+                Add your first NZ or AU property to get started
+              </p>
+            </div>
+            <div className="flex justify-center gap-3 pt-1">
+              <Badge variant="outline" className="text-xs gap-1">🇳🇿 New Zealand</Badge>
+              <Badge variant="outline" className="text-xs gap-1">🇦🇺 Australia</Badge>
             </div>
           </CardContent>
         </Card>

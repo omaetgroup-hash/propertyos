@@ -17,8 +17,13 @@ function SignInPage() {
         <div className="space-y-2">
           <h1 className="text-2xl font-bold text-sidebar-foreground tracking-tight">PropertyOS</h1>
           <p className="text-sidebar-foreground/60 text-sm leading-relaxed">
-            Professional property management platform for residential and commercial portfolios.
+            Property management for New Zealand and Australia — residential, commercial, compliance and more.
           </p>
+          <div className="flex justify-center gap-2 pt-1">
+            <span className="text-xs text-sidebar-foreground/40">🇳🇿 New Zealand</span>
+            <span className="text-xs text-sidebar-foreground/40">·</span>
+            <span className="text-xs text-sidebar-foreground/40">🇦🇺 Australia</span>
+          </div>
         </div>
         <SignInButton className="w-full" />
       </div>
