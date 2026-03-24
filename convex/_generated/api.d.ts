@@ -8,7 +8,9 @@
  * @module
  */
 
+import type * as compliance from "../compliance.js";
 import type * as expenses from "../expenses.js";
+import type * as inspections from "../inspections.js";
 import type * as leases from "../leases.js";
 import type * as properties from "../properties.js";
 import type * as reports from "../reports.js";
@@ -24,7 +26,9 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  compliance: typeof compliance;
   expenses: typeof expenses;
+  inspections: typeof inspections;
   leases: typeof leases;
   properties: typeof properties;
   reports: typeof reports;
