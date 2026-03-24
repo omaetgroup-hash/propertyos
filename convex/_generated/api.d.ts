@@ -15,6 +15,7 @@ import type * as reports from "../reports.js";
 import type * as tenants from "../tenants.js";
 import type * as units from "../units.js";
 import type * as users from "../users.js";
+import type * as utilities from "../utilities.js";
 
 import type {
   ApiFromModules,
@@ -30,6 +31,7 @@ declare const fullApi: ApiFromModules<{
   tenants: typeof tenants;
   units: typeof units;
   users: typeof users;
+  utilities: typeof utilities;
 }>;
 
 /**
