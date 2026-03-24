@@ -8,6 +8,8 @@
  * @module
  */
 
+import type * as expenses from "../expenses.js";
+import type * as leases from "../leases.js";
 import type * as properties from "../properties.js";
 import type * as tenants from "../tenants.js";
 import type * as units from "../units.js";
@@ -20,6 +22,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  expenses: typeof expenses;
+  leases: typeof leases;
   properties: typeof properties;
   tenants: typeof tenants;
   units: typeof units;
