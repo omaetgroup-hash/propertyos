@@ -10,6 +10,7 @@
 
 import type * as properties from "../properties.js";
 import type * as tenants from "../tenants.js";
+import type * as units from "../units.js";
 import type * as users from "../users.js";
 
 import type {
@@ -21,6 +22,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   properties: typeof properties;
   tenants: typeof tenants;
+  units: typeof units;
   users: typeof users;
 }>;
 
