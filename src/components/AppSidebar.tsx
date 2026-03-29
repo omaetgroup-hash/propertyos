@@ -12,23 +12,31 @@ import {
   ChevronRight,
   LogOut,
   BarChart3,
+  TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils.ts";
 import { useAuth } from "@/hooks/use-auth.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
 
-const navItems = [
+const mainNavItems = [
   { label: "Dashboard", href: "/", icon: LayoutDashboard },
   { label: "Properties", href: "/properties", icon: Building2 },
   { label: "Tenants", href: "/tenants", icon: Users },
   { label: "Leases", href: "/leases", icon: FileText },
+];
+
+const operationsNavItems = [
   { label: "Financials", href: "/financials", icon: DollarSign },
   { label: "Utilities", href: "/utilities", icon: Zap },
   { label: "Inspections", href: "/inspections", icon: ClipboardCheck },
   { label: "Compliance", href: "/compliance", icon: ShieldCheck },
   { label: "Map View", href: "/map", icon: MapPin },
   { label: "Reports", href: "/reports", icon: BarChart3 },
+];
+
+const dealNavItems = [
+  { label: "Opportunities", href: "/opportunities", icon: TrendingUp },
 ];
 
 export default function AppSidebar() {
@@ -60,7 +68,7 @@ export default function AppSidebar() {
         <p className="text-[10px] font-semibold text-sidebar-foreground/40 uppercase tracking-widest px-3 pb-2">
           Main Menu
         </p>
-        {navItems.slice(0, 4).map(({ label, href, icon: Icon }) => {
+        {mainNavItems.map(({ label, href, icon: Icon }) => {
           const isActive = href === "/" ? location.pathname === "/" : location.pathname.startsWith(href);
           return (
             <NavLink
@@ -83,7 +91,30 @@ export default function AppSidebar() {
         <p className="text-[10px] font-semibold text-sidebar-foreground/40 uppercase tracking-widest px-3 pb-2 pt-4">
           Financial & Compliance
         </p>
-        {navItems.slice(4).map(({ label, href, icon: Icon }) => {
+        {operationsNavItems.map(({ label, href, icon: Icon }) => {
+          const isActive = location.pathname.startsWith(href);
+          return (
+            <NavLink
+              key={href}
+              to={href}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all group",
+                isActive
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+              )}
+            >
+              <Icon className="w-4 h-4 shrink-0" />
+              <span className="flex-1">{label}</span>
+              {isActive && <ChevronRight className="w-3 h-3 opacity-60" />}
+            </NavLink>
+          );
+        })}
+
+        <p className="text-[10px] font-semibold text-sidebar-foreground/40 uppercase tracking-widest px-3 pb-2 pt-4">
+          Deal Analysis
+        </p>
+        {dealNavItems.map(({ label, href, icon: Icon }) => {
           const isActive = location.pathname.startsWith(href);
           return (
             <NavLink

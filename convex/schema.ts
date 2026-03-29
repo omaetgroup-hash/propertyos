@@ -176,6 +176,38 @@ export default defineSchema({
     .index("by_owner", ["ownerId"])
     .index("by_status", ["status"]),
 
+  opportunities: defineTable({
+    name: v.string(),
+    location: v.string(),
+    notes: v.optional(v.string()),
+    // Capacity
+    numberOfRooms: v.number(),
+    bedsPerRoom: v.number(),
+    // Revenue
+    pricingType: v.union(v.literal("nightly"), v.literal("weekly")),
+    pricePerUnit: v.number(),
+    occupancyRate: v.number(), // 0–100
+    // Weekly expenses
+    leaseCost: v.number(),
+    power: v.number(),
+    water: v.number(),
+    internet: v.number(),
+    cleaning: v.number(),
+    maintenance: v.number(),
+    otherExpenses: v.number(),
+    // Lifecycle
+    status: v.union(
+      v.literal("evaluating"),
+      v.literal("approved"),
+      v.literal("rejected"),
+      v.literal("converted")
+    ),
+    convertedPropertyId: v.optional(v.id("properties")),
+    ownerId: v.id("users"),
+  })
+    .index("by_owner", ["ownerId"])
+    .index("by_status", ["status"]),
+
   compliance: defineTable({
     propertyId: v.id("properties"),
     title: v.string(),
