@@ -1,17 +1,20 @@
 import { query, mutation } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
+import {
+  assertBelongsToProperty,
+  getCurrentUserOrNull,
+  requireCurrentUser,
+  requireOwnedProperty,
+  requireOwnedUnit,
+  requireOwnedUtility,
+} from "./authz";
 
 // ── Queries ───────────────────────────────────────────────────────────────────
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
+    const user = await getCurrentUserOrNull(ctx);
     if (!user) return [];
 
     const utilities = await ctx.db
@@ -38,12 +41,7 @@ export const list = query({
 export const getStats = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
+    const user = await getCurrentUserOrNull(ctx);
     if (!user) return null;
 
     const utilities = await ctx.db
@@ -98,13 +96,12 @@ export const create = mutation({
     status: v.union(v.literal("paid"), v.literal("pending"), v.literal("overdue")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError({ message: "Not authenticated", code: "UNAUTHENTICATED" });
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
-    if (!user) throw new ConvexError({ message: "User not found", code: "NOT_FOUND" });
+    const user = await requireCurrentUser(ctx);
+    await requireOwnedProperty(ctx, args.propertyId, user._id);
+    if (args.unitId) {
+      const unit = await requireOwnedUnit(ctx, args.unitId, user._id);
+      assertBelongsToProperty("Unit", unit.propertyId, args.propertyId);
+    }
     return await ctx.db.insert("utilities", { ...args, ownerId: user._id });
   },
 });
@@ -115,8 +112,8 @@ export const updateStatus = mutation({
     status: v.union(v.literal("paid"), v.literal("pending"), v.literal("overdue")),
   },
   handler: async (ctx, args) => {
-    const existing = await ctx.db.get(args.id);
-    if (!existing) throw new ConvexError({ message: "Utility not found", code: "NOT_FOUND" });
+    const user = await requireCurrentUser(ctx);
+    await requireOwnedUtility(ctx, args.id, user._id);
     await ctx.db.patch(args.id, { status: args.status });
   },
 });
@@ -124,6 +121,8 @@ export const updateStatus = mutation({
 export const remove = mutation({
   args: { id: v.id("utilities") },
   handler: async (ctx, args) => {
+    const user = await requireCurrentUser(ctx);
+    await requireOwnedUtility(ctx, args.id, user._id);
     await ctx.db.delete(args.id);
   },
 });

@@ -1,16 +1,20 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
+import {
+  assertBelongsToProperty,
+  getCurrentUserOrNull,
+  requireCurrentUser,
+  requireOwnedLease,
+  requireOwnedProperty,
+  requireOwnedTenant,
+  requireOwnedUnit,
+} from "./authz";
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
+    const user = await getCurrentUserOrNull(ctx);
     if (!user) return [];
 
     const properties = await ctx.db
@@ -53,13 +57,24 @@ export const list = query({
 export const get = query({
   args: { id: v.id("leases") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    const user = await getCurrentUserOrNull(ctx);
+    if (!user) return null;
+    const lease = await ctx.db.get(args.id);
+    if (!lease) return null;
+    const property = await ctx.db.get(lease.propertyId);
+    if (!property || property.ownerId !== user._id) return null;
+    return lease;
   },
 });
 
 export const listByProperty = query({
   args: { propertyId: v.id("properties") },
   handler: async (ctx, args) => {
+    const user = await getCurrentUserOrNull(ctx);
+    if (!user) return [];
+    const property = await ctx.db.get(args.propertyId);
+    if (!property || property.ownerId !== user._id) return [];
+
     const leases = await ctx.db
       .query("leases")
       .withIndex("by_property", (q) => q.eq("propertyId", args.propertyId))
@@ -101,8 +116,11 @@ export const create = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError({ message: "Not authenticated", code: "UNAUTHENTICATED" });
+    const user = await requireCurrentUser(ctx);
+    await requireOwnedProperty(ctx, args.propertyId, user._id);
+    const unit = await requireOwnedUnit(ctx, args.unitId, user._id);
+    await requireOwnedTenant(ctx, args.tenantId, user._id);
+    assertBelongsToProperty("Unit", unit.propertyId, args.propertyId);
     // Mark unit as occupied when lease is active
     if (args.status === "active" || args.status === "periodic") {
       await ctx.db.patch(args.unitId, { status: "occupied" });
@@ -123,8 +141,8 @@ export const updateStatus = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const lease = await ctx.db.get(args.id);
-    if (!lease) throw new ConvexError({ message: "Lease not found", code: "NOT_FOUND" });
+    const user = await requireCurrentUser(ctx);
+    const lease = await requireOwnedLease(ctx, args.id, user._id);
     await ctx.db.patch(args.id, { status: args.status });
     // Update unit status accordingly
     if (args.status === "active" || args.status === "periodic") {
@@ -145,7 +163,9 @@ export const update = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const user = await requireCurrentUser(ctx);
     const { id, ...fields } = args;
+    await requireOwnedLease(ctx, id, user._id);
     await ctx.db.patch(id, fields);
   },
 });
@@ -153,6 +173,8 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id("leases") },
   handler: async (ctx, args) => {
+    const user = await requireCurrentUser(ctx);
+    await requireOwnedLease(ctx, args.id, user._id);
     await ctx.db.delete(args.id);
   },
 });

@@ -3,6 +3,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
 import type { Doc } from "@/convex/_generated/dataModel.d.ts";
 import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
+import { Navigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { SignInButton } from "@/components/ui/signin.tsx";
@@ -48,9 +49,27 @@ export default function OpportunitiesPage() {
 }
 
 function OpportunitiesInner() {
+  const currentUser = useQuery(api.users.getCurrentUser, {});
   const opportunities = useQuery(api.opportunities.list, {});
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Opportunity | null>(null);
+
+  if (currentUser === undefined) {
+    return (
+      <div className="p-6 space-y-4">
+        <Skeleton className="h-10 w-64" />
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-48 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (currentUser?.role !== "admin") {
+    return <Navigate to="/" replace />;
+  }
 
   const openCreate = () => {
     setEditTarget(null);

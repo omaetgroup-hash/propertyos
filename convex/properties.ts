@@ -1,16 +1,12 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
+import { getCurrentUserOrNull, requireCurrentUser, requireOwnedProperty } from "./authz";
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
+    const user = await getCurrentUserOrNull(ctx);
     if (!user) return [];
     const properties = await ctx.db
       .query("properties")
@@ -28,8 +24,11 @@ export const list = query({
 export const get = query({
   args: { id: v.id("properties") },
   handler: async (ctx, args) => {
+    const user = await getCurrentUserOrNull(ctx);
+    if (!user) return null;
+
     const property = await ctx.db.get(args.id);
-    if (!property) return null;
+    if (!property || property.ownerId !== user._id) return null;
     return {
       ...property,
       imageUrl: property.imageStorageId
@@ -60,13 +59,7 @@ export const create = mutation({
     lng: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError({ message: "Not authenticated", code: "UNAUTHENTICATED" });
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
-    if (!user) throw new ConvexError({ message: "User not found", code: "NOT_FOUND" });
+    const user = await requireCurrentUser(ctx);
     return await ctx.db.insert("properties", { ...args, ownerId: user._id });
   },
 });
@@ -94,7 +87,9 @@ export const update = mutation({
     imageStorageId: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
+    const user = await requireCurrentUser(ctx);
     const { id, ...fields } = args;
+    await requireOwnedProperty(ctx, id, user._id);
     await ctx.db.patch(id, fields);
   },
 });
@@ -102,7 +97,36 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id("properties") },
   handler: async (ctx, args) => {
+    const user = await requireCurrentUser(ctx);
+    await requireOwnedProperty(ctx, args.id, user._id);
     await ctx.db.delete(args.id);
+  },
+});
+
+export const removeImage = mutation({
+  args: { id: v.id("properties") },
+  handler: async (ctx, args) => {
+    const user = await requireCurrentUser(ctx);
+    const property = await requireOwnedProperty(ctx, args.id, user._id);
+    const { _id, _creationTime, imageStorageId, ...rest } = property;
+    void _id;
+    void _creationTime;
+    void imageStorageId;
+    await ctx.db.replace(args.id, rest);
+  },
+});
+
+export const clearLocation = mutation({
+  args: { id: v.id("properties") },
+  handler: async (ctx, args) => {
+    const user = await requireCurrentUser(ctx);
+    const property = await requireOwnedProperty(ctx, args.id, user._id);
+    const { _id, _creationTime, lat, lng, ...rest } = property;
+    void _id;
+    void _creationTime;
+    void lat;
+    void lng;
+    await ctx.db.replace(args.id, rest);
   },
 });
 

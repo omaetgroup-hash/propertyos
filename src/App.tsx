@@ -15,6 +15,7 @@ import PropertyDetailPage from "./pages/properties/[id]/page.tsx";
 import MapPage from "./pages/map/page.tsx";
 import ReportsPage from "./pages/reports/page.tsx";
 import OpportunitiesPage from "./pages/opportunities/page.tsx";
+import AccountingPage from "./pages/accounting/page.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 export default function App() {
@@ -35,6 +36,7 @@ export default function App() {
             <Route path="/compliance" element={<CompliancePage />} />
             <Route path="/map" element={<MapPage />} />
             <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/accounting" element={<AccountingPage />} />
             <Route path="/opportunities" element={<OpportunitiesPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />

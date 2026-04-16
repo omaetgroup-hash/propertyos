@@ -1,17 +1,18 @@
 import { query, mutation } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
+import {
+  getCurrentUserOrNull,
+  requireCurrentUser,
+  requireOwnedCompliance,
+  requireOwnedProperty,
+} from "./authz";
 
 // ── Queries ───────────────────────────────────────────────────────────────────
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
+    const user = await getCurrentUserOrNull(ctx);
     if (!user) return [];
 
     const items = await ctx.db
@@ -36,12 +37,7 @@ export const list = query({
 export const getStats = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
+    const user = await getCurrentUserOrNull(ctx);
     if (!user) return null;
 
     const items = await ctx.db
@@ -112,13 +108,8 @@ export const create = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError({ message: "Not authenticated", code: "UNAUTHENTICATED" });
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
-    if (!user) throw new ConvexError({ message: "User not found", code: "NOT_FOUND" });
+    const user = await requireCurrentUser(ctx);
+    await requireOwnedProperty(ctx, args.propertyId, user._id);
     return await ctx.db.insert("compliance", { ...args, ownerId: user._id });
   },
 });
@@ -134,8 +125,8 @@ export const updateStatus = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const existing = await ctx.db.get(args.id);
-    if (!existing) throw new ConvexError({ message: "Item not found", code: "NOT_FOUND" });
+    const user = await requireCurrentUser(ctx);
+    await requireOwnedCompliance(ctx, args.id, user._id);
     await ctx.db.patch(args.id, { status: args.status });
   },
 });
@@ -143,6 +134,8 @@ export const updateStatus = mutation({
 export const remove = mutation({
   args: { id: v.id("compliance") },
   handler: async (ctx, args) => {
+    const user = await requireCurrentUser(ctx);
+    await requireOwnedCompliance(ctx, args.id, user._id);
     await ctx.db.delete(args.id);
   },
 });

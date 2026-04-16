@@ -99,6 +99,42 @@ export const EXPENSE_CATEGORIES = [
   { value: "other", label: "Other" },
 ] as const;
 
+// ── Accounting module — NZ chart of accounts ──────────────────────────────────
+export const INCOME_CATEGORIES = [
+  { value: "rental_income", label: "Rental Income" },
+  { value: "bond_income", label: "Bond Income" },
+  { value: "late_fees", label: "Late Fees" },
+  { value: "other_income", label: "Other Income" },
+] as const;
+
+export const ACCOUNTING_EXPENSE_CATEGORIES = [
+  { value: "repairs_maintenance", label: "Repairs & Maintenance" },
+  { value: "council_rates", label: "Council Rates" },
+  { value: "insurance", label: "Insurance" },
+  { value: "property_management_fees", label: "Property Management Fees" },
+  { value: "utilities", label: "Utilities" },
+  { value: "cleaning", label: "Cleaning" },
+  { value: "advertising", label: "Advertising" },
+  { value: "legal_fees", label: "Legal Fees" },
+  { value: "accounting_fees", label: "Accounting Fees" },
+  { value: "other_expenses", label: "Other Expenses" },
+] as const;
+
+export const TRANSACTION_CATEGORIES = [
+  ...INCOME_CATEGORIES,
+  ...ACCOUNTING_EXPENSE_CATEGORIES,
+] as const;
+
+export type TransactionCategory = (typeof TRANSACTION_CATEGORIES)[number]["value"];
+
+export function getCategoryLabel(value: string): string {
+  return (
+    (TRANSACTION_CATEGORIES as ReadonlyArray<{ value: string; label: string }>).find(
+      (c) => c.value === value
+    )?.label ?? value
+  );
+}
+
 // ── Country options ───────────────────────────────────────────────────────────
 export const COUNTRIES = [
   { value: "nz", label: "New Zealand", currency: "NZD", locale: "en-NZ", flag: "🇳🇿" },

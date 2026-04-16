@@ -1,6 +1,8 @@
 import { Outlet } from "react-router-dom";
+import { useEffect } from "react";
 import AppSidebar from "@/components/AppSidebar.tsx";
-import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
+import { Authenticated, Unauthenticated, AuthLoading, useQuery, useMutation, useConvexAuth } from "convex/react";
+import { api } from "@/convex/_generated/api.js";
 import { SignInButton } from "@/components/ui/signin.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Building2 } from "lucide-react";
@@ -53,6 +55,17 @@ function LoadingLayout() {
 }
 
 export default function AppLayout() {
+  const { isAuthenticated } = useConvexAuth();
+  const currentUser = useQuery(api.users.getCurrentUser, {});
+  const updateCurrentUser = useMutation(api.users.updateCurrentUser);
+
+  // Ensure user record exists in DB whenever authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      updateCurrentUser();
+    }
+  }, [isAuthenticated, updateCurrentUser]);
+
   return (
     <>
       <AuthLoading>
@@ -62,12 +75,16 @@ export default function AppLayout() {
         <SignInPage />
       </Unauthenticated>
       <Authenticated>
-        <div className="flex min-h-screen bg-background">
-          <AppSidebar />
-          <main className="flex-1 overflow-y-auto">
-            <Outlet />
-          </main>
-        </div>
+        {currentUser === undefined ? (
+          <LoadingLayout />
+        ) : (
+          <div className="flex min-h-screen bg-background">
+            <AppSidebar />
+            <main className="flex-1 overflow-y-auto">
+              <Outlet />
+            </main>
+          </div>
+        )}
       </Authenticated>
     </>
   );

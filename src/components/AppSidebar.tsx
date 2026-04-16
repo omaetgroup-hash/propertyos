@@ -13,6 +13,7 @@ import {
   LogOut,
   BarChart3,
   TrendingUp,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils.ts";
 import { useAuth } from "@/hooks/use-auth.ts";
@@ -28,6 +29,7 @@ const mainNavItems = [
 
 const operationsNavItems = [
   { label: "Financials", href: "/financials", icon: DollarSign },
+  { label: "Accounting", href: "/accounting", icon: BookOpen },
   { label: "Utilities", href: "/utilities", icon: Zap },
   { label: "Inspections", href: "/inspections", icon: ClipboardCheck },
   { label: "Compliance", href: "/compliance", icon: ShieldCheck },

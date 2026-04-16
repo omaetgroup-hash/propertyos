@@ -1,16 +1,19 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
+import {
+  assertBelongsToProperty,
+  getCurrentUserOrNull,
+  requireCurrentUser,
+  requireOwnedExpense,
+  requireOwnedProperty,
+  requireOwnedUnit,
+} from "./authz";
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
+    const user = await getCurrentUserOrNull(ctx);
     if (!user) return [];
 
     const expenses = await ctx.db
@@ -35,6 +38,11 @@ export const list = query({
 export const listByProperty = query({
   args: { propertyId: v.id("properties") },
   handler: async (ctx, args) => {
+    const user = await getCurrentUserOrNull(ctx);
+    if (!user) return [];
+    const property = await ctx.db.get(args.propertyId);
+    if (!property || property.ownerId !== user._id) return [];
+
     return await ctx.db
       .query("expenses")
       .withIndex("by_property", (q) => q.eq("propertyId", args.propertyId))
@@ -46,12 +54,7 @@ export const listByProperty = query({
 export const getFinancialStats = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
+    const user = await getCurrentUserOrNull(ctx);
     if (!user) return null;
 
     const expenses = await ctx.db
@@ -141,13 +144,12 @@ export const create = mutation({
     gstInclusive: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError({ message: "Not authenticated", code: "UNAUTHENTICATED" });
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
-    if (!user) throw new ConvexError({ message: "User not found", code: "NOT_FOUND" });
+    const user = await requireCurrentUser(ctx);
+    await requireOwnedProperty(ctx, args.propertyId, user._id);
+    if (args.unitId) {
+      const unit = await requireOwnedUnit(ctx, args.unitId, user._id);
+      assertBelongsToProperty("Unit", unit.propertyId, args.propertyId);
+    }
     return await ctx.db.insert("expenses", { ...args, ownerId: user._id });
   },
 });
@@ -155,6 +157,8 @@ export const create = mutation({
 export const remove = mutation({
   args: { id: v.id("expenses") },
   handler: async (ctx, args) => {
+    const user = await requireCurrentUser(ctx);
+    await requireOwnedExpense(ctx, args.id, user._id);
     await ctx.db.delete(args.id);
   },
 });

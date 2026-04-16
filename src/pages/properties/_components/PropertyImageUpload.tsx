@@ -29,6 +29,7 @@ export default function PropertyImageUpload({ propertyId, imageUrl }: Props) {
 
   const generateUploadUrl = useMutation(api.storage.generateUploadUrl);
   const updateProperty = useMutation(api.properties.update);
+  const removeImage = useMutation(api.properties.removeImage);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -73,8 +74,7 @@ export default function PropertyImageUpload({ propertyId, imageUrl }: Props) {
 
   async function handleRemoveImage() {
     try {
-      // Pass undefined to clear — we patch with optional field
-      await updateProperty({ id: propertyId });
+      await removeImage({ id: propertyId });
       toast.success("Cover photo removed");
     } catch {
       toast.error("Failed to remove image");

@@ -66,6 +66,7 @@ export default function PropertyLocationPicker({
   const [saving, setSaving] = useState(false);
 
   const updateProperty = useMutation(api.properties.update);
+  const clearLocation = useMutation(api.properties.clearLocation);
 
   function handleLocationPick(newLat: number, newLng: number) {
     setLat(Math.round(newLat * 1000000) / 1000000);
@@ -89,8 +90,7 @@ export default function PropertyLocationPicker({
   async function handleClear() {
     setSaving(true);
     try {
-      // Clear by passing undefined values - they won't update since they're optional
-      await updateProperty({ id: propertyId, lat: undefined, lng: undefined });
+      await clearLocation({ id: propertyId });
       toast.success("Location cleared");
       setHasSet(false);
       onClose();

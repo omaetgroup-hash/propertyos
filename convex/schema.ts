@@ -6,6 +6,7 @@ export default defineSchema({
     tokenIdentifier: v.string(),
     name: v.optional(v.string()),
     email: v.optional(v.string()),
+    role: v.optional(v.union(v.literal("admin"), v.literal("staff"))),
   }).index("by_token", ["tokenIdentifier"]),
 
   properties: defineTable({
@@ -207,6 +208,47 @@ export default defineSchema({
   })
     .index("by_owner", ["ownerId"])
     .index("by_status", ["status"]),
+
+  transactions: defineTable({
+    date: v.string(),
+    type: v.union(v.literal("income"), v.literal("expense")),
+    category: v.union(
+      // Income categories
+      v.literal("rental_income"),
+      v.literal("bond_income"),
+      v.literal("late_fees"),
+      v.literal("other_income"),
+      // Expense categories
+      v.literal("repairs_maintenance"),
+      v.literal("council_rates"),
+      v.literal("insurance"),
+      v.literal("property_management_fees"),
+      v.literal("utilities"),
+      v.literal("cleaning"),
+      v.literal("advertising"),
+      v.literal("legal_fees"),
+      v.literal("accounting_fees"),
+      v.literal("other_expenses")
+    ),
+    // amount = gross (GST-inclusive if applicable)
+    amount: v.number(),
+    // gstAmount = extracted GST component (0 if not a GST transaction)
+    gstAmount: v.number(),
+    // netAmount = amount - gstAmount
+    netAmount: v.number(),
+    propertyId: v.id("properties"),
+    description: v.string(),
+    supplierId: v.optional(v.string()),
+    receiptStorageId: v.optional(v.id("_storage")),
+    xeroSyncStatus: v.union(
+      v.literal("not_synced"),
+      v.literal("pending"),
+      v.literal("synced")
+    ),
+    ownerId: v.id("users"),
+  })
+    .index("by_owner_and_date", ["ownerId", "date"])
+    .index("by_property_and_date", ["propertyId", "date"]),
 
   compliance: defineTable({
     propertyId: v.id("properties"),

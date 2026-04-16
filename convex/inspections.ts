@@ -1,17 +1,20 @@
 import { query, mutation } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
+import {
+  assertBelongsToProperty,
+  getCurrentUserOrNull,
+  requireCurrentUser,
+  requireOwnedInspection,
+  requireOwnedProperty,
+  requireOwnedUnit,
+} from "./authz";
 
 // ── Queries ───────────────────────────────────────────────────────────────────
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
+    const user = await getCurrentUserOrNull(ctx);
     if (!user) return [];
 
     const items = await ctx.db
@@ -38,12 +41,7 @@ export const list = query({
 export const getStats = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
+    const user = await getCurrentUserOrNull(ctx);
     if (!user) return null;
 
     const items = await ctx.db
@@ -102,13 +100,12 @@ export const create = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError({ message: "Not authenticated", code: "UNAUTHENTICATED" });
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
-    if (!user) throw new ConvexError({ message: "User not found", code: "NOT_FOUND" });
+    const user = await requireCurrentUser(ctx);
+    await requireOwnedProperty(ctx, args.propertyId, user._id);
+    if (args.unitId) {
+      const unit = await requireOwnedUnit(ctx, args.unitId, user._id);
+      assertBelongsToProperty("Unit", unit.propertyId, args.propertyId);
+    }
     return await ctx.db.insert("inspections", { ...args, ownerId: user._id });
   },
 });
@@ -126,9 +123,9 @@ export const complete = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const user = await requireCurrentUser(ctx);
     const { id, ...fields } = args;
-    const existing = await ctx.db.get(id);
-    if (!existing) throw new ConvexError({ message: "Inspection not found", code: "NOT_FOUND" });
+    await requireOwnedInspection(ctx, id, user._id);
     await ctx.db.patch(id, { ...fields, status: "completed" });
   },
 });
@@ -144,8 +141,8 @@ export const updateStatus = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const existing = await ctx.db.get(args.id);
-    if (!existing) throw new ConvexError({ message: "Inspection not found", code: "NOT_FOUND" });
+    const user = await requireCurrentUser(ctx);
+    await requireOwnedInspection(ctx, args.id, user._id);
     await ctx.db.patch(args.id, { status: args.status });
   },
 });
@@ -153,6 +150,8 @@ export const updateStatus = mutation({
 export const remove = mutation({
   args: { id: v.id("inspections") },
   handler: async (ctx, args) => {
+    const user = await requireCurrentUser(ctx);
+    await requireOwnedInspection(ctx, args.id, user._id);
     await ctx.db.delete(args.id);
   },
 });

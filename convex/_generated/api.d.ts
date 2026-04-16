@@ -8,6 +8,8 @@
  * @module
  */
 
+import type * as accounting from "../accounting.js";
+import type * as authz from "../authz.js";
 import type * as compliance from "../compliance.js";
 import type * as expenses from "../expenses.js";
 import type * as inspections from "../inspections.js";
@@ -15,6 +17,7 @@ import type * as leases from "../leases.js";
 import type * as opportunities from "../opportunities.js";
 import type * as properties from "../properties.js";
 import type * as reports from "../reports.js";
+import type * as roles from "../roles.js";
 import type * as storage from "../storage.js";
 import type * as tenants from "../tenants.js";
 import type * as units from "../units.js";
@@ -28,6 +31,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  accounting: typeof accounting;
+  authz: typeof authz;
   compliance: typeof compliance;
   expenses: typeof expenses;
   inspections: typeof inspections;
@@ -35,6 +40,7 @@ declare const fullApi: ApiFromModules<{
   opportunities: typeof opportunities;
   properties: typeof properties;
   reports: typeof reports;
+  roles: typeof roles;
   storage: typeof storage;
   tenants: typeof tenants;
   units: typeof units;

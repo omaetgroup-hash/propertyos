@@ -69,6 +69,9 @@
     "vaul": "^1.1.2",
     "zod": "^3.25.76"
   },
+  "overrides": {
+    "lodash": "^4.18.1"
+  },
   "devDependencies": {
     "@convex-dev/eslint-plugin": "^1.2.0",
     "@eslint/js": "^9.39.4",

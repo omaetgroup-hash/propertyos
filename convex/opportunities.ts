@@ -1,17 +1,12 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { ConvexError } from "convex/values";
+import { getCurrentUserOrNull, requireAdminUser, requireOwnedOpportunity } from "./authz";
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
-    if (!user) return [];
+    const user = await getCurrentUserOrNull(ctx);
+    if (!user || user.role !== "admin") return [];
     return await ctx.db
       .query("opportunities")
       .withIndex("by_owner", (q) => q.eq("ownerId", user._id))
@@ -23,7 +18,11 @@ export const list = query({
 export const get = query({
   args: { id: v.id("opportunities") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    const user = await getCurrentUserOrNull(ctx);
+    if (!user || user.role !== "admin") return null;
+    const opportunity = await ctx.db.get(args.id);
+    if (!opportunity || opportunity.ownerId !== user._id) return null;
+    return opportunity;
   },
 });
 
@@ -52,13 +51,7 @@ export const create = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError({ message: "Not authenticated", code: "UNAUTHENTICATED" });
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
-    if (!user) throw new ConvexError({ message: "User not found", code: "NOT_FOUND" });
+    const user = await requireAdminUser(ctx);
     return await ctx.db.insert("opportunities", { ...args, ownerId: user._id });
   },
 });
@@ -92,7 +85,9 @@ export const update = mutation({
     convertedPropertyId: v.optional(v.id("properties")),
   },
   handler: async (ctx, args) => {
+    const user = await requireAdminUser(ctx);
     const { id, ...fields } = args;
+    await requireOwnedOpportunity(ctx, id, user._id);
     await ctx.db.patch(id, fields);
   },
 });
@@ -100,6 +95,8 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id("opportunities") },
   handler: async (ctx, args) => {
+    const user = await requireAdminUser(ctx);
+    await requireOwnedOpportunity(ctx, args.id, user._id);
     await ctx.db.delete(args.id);
   },
 });
@@ -114,16 +111,8 @@ export const convertToProperty = mutation({
     postCode: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError({ message: "Not authenticated", code: "UNAUTHENTICATED" });
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
-    if (!user) throw new ConvexError({ message: "User not found", code: "NOT_FOUND" });
-
-    const opportunity = await ctx.db.get(args.id);
-    if (!opportunity) throw new ConvexError({ message: "Opportunity not found", code: "NOT_FOUND" });
+    const user = await requireAdminUser(ctx);
+    const opportunity = await requireOwnedOpportunity(ctx, args.id, user._id);
 
     const propertyId = await ctx.db.insert("properties", {
       name: opportunity.name,
