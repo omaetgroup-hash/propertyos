@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils.ts";
 import { useAuth } from "@/hooks/use-auth.ts";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api.js";
 import { Button } from "@/components/ui/button.tsx";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
 
@@ -43,9 +45,10 @@ const dealNavItems = [
 
 export default function AppSidebar() {
   const location = useLocation();
-  const { user, removeUser } = useAuth();
+  const { removeUser } = useAuth();
+  const currentUser = useQuery(api.users.getCurrentUser, {});
 
-  const initials = user?.profile.name
+  const initials = currentUser?.name
     ?.split(" ")
     .map((n) => n[0])
     .join("")

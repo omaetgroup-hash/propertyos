@@ -1,1 +1,15 @@
-export { useUser, useAuth } from "@usehercules/auth/react";
+import { useConvexAuth } from "convex/react";
+import { useAuthActions } from "@convex-dev/auth/react";
+
+export function useAuth() {
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const { signIn, signOut } = useAuthActions();
+
+  return {
+    isAuthenticated,
+    isLoading,
+    error: null,
+    signinRedirect: () => signIn("google"),
+    removeUser: signOut,
+  };
+}

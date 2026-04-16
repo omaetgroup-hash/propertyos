@@ -9,9 +9,11 @@
  */
 
 import type * as accounting from "../accounting.js";
+import type * as auth from "../auth.js";
 import type * as authz from "../authz.js";
 import type * as compliance from "../compliance.js";
 import type * as expenses from "../expenses.js";
+import type * as http from "../http.js";
 import type * as inspections from "../inspections.js";
 import type * as leases from "../leases.js";
 import type * as opportunities from "../opportunities.js";
@@ -32,9 +34,11 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   accounting: typeof accounting;
+  auth: typeof auth;
   authz: typeof authz;
   compliance: typeof compliance;
   expenses: typeof expenses;
+  http: typeof http;
   inspections: typeof inspections;
   leases: typeof leases;
   opportunities: typeof opportunities;

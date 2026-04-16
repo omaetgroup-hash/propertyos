@@ -1,7 +1,6 @@
 import "leaflet/dist/leaflet.css";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { DefaultProviders } from "./components/providers/default.tsx";
-import AuthCallback from "./pages/auth/Callback.tsx";
 import AppLayout from "./components/AppLayout.tsx";
 import Index from "./pages/Index.tsx";
 import PropertiesPage from "./pages/properties/page.tsx";
@@ -23,7 +22,6 @@ export default function App() {
     <DefaultProviders>
       <BrowserRouter>
         <Routes>
-          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route element={<AppLayout />}>
             <Route path="/" element={<Index />} />
             <Route path="/properties" element={<PropertiesPage />} />
