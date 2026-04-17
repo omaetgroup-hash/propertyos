@@ -16,7 +16,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils.ts";
-import { useAuth } from "@/hooks/use-auth.ts";
+import { useAuthActions } from "@/hooks/use-auth.ts";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
 import { Button } from "@/components/ui/button.tsx";
@@ -45,7 +45,7 @@ const dealNavItems = [
 
 export default function AppSidebar() {
   const location = useLocation();
-  const { removeUser } = useAuth();
+  const { signOut: removeUser } = useAuthActions();
   const currentUser = useQuery(api.users.getCurrentUser, {});
 
   const initials = currentUser?.name
