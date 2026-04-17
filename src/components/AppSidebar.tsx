@@ -150,10 +150,10 @@ export default function AppSidebar() {
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-sidebar-foreground truncate">
-              {user?.profile.name ?? "User"}
+              {currentUser?.name ?? "User"}
             </p>
             <p className="text-[11px] text-sidebar-foreground/50 truncate">
-              {user?.profile.email ?? ""}
+              {currentUser?.email ?? ""}
             </p>
           </div>
           <Button

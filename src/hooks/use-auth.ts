@@ -8,7 +8,7 @@ export function useAuth() {
   return {
     isAuthenticated,
     isLoading,
-    error: null,
+    error: null as Error | null,
     signinRedirect: () => signIn("google"),
     removeUser: signOut,
   };
