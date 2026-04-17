@@ -4,12 +4,24 @@ import { authTables } from "@convex-dev/auth/server";
 
 export default defineSchema({
   ...authTables,
+  // Extends authTables.users — must preserve the email + phone indexes
+  // that @convex-dev/auth requires, and add our own fields/indexes on top.
   users: defineTable({
-    tokenIdentifier: v.string(),
+    // @convex-dev/auth fields
     name: v.optional(v.string()),
+    image: v.optional(v.string()),
     email: v.optional(v.string()),
+    emailVerificationTime: v.optional(v.number()),
+    phone: v.optional(v.string()),
+    phoneVerificationTime: v.optional(v.number()),
+    isAnonymous: v.optional(v.boolean()),
+    // App-specific fields
+    tokenIdentifier: v.optional(v.string()),
     role: v.optional(v.union(v.literal("admin"), v.literal("staff"))),
-  }).index("by_token", ["tokenIdentifier"]),
+  })
+    .index("email", ["email"])
+    .index("phone", ["phone"])
+    .index("by_token", ["tokenIdentifier"]),
 
   properties: defineTable({
     name: v.string(),
