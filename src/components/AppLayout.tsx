@@ -10,25 +10,28 @@ import { Building2, Loader2 } from "lucide-react";
 function SignInPage() {
   const { signIn } = useAuthActions();
   const [pending, setPending] = useState(false);
+  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const convexUrl = import.meta.env.VITE_CONVEX_URL ?? "(not set)";
 
   const handleSignIn = async () => {
     setError(null);
+    setRedirectUrl(null);
     setPending(true);
     try {
       const result = await signIn("google");
       if (result?.redirect) {
         const url = result.redirect.toString();
-        window.open(url, "_self");
+        setRedirectUrl(url);
+        // Try every navigation method available
+        try { window.location.href = url; } catch (_) {}
+        try { window.location.assign(url); } catch (_) {}
+        try { window.open(url, "_self"); } catch (_) {}
       } else {
-        setError("No redirect URL returned. result=" + JSON.stringify(result));
+        setError("No redirect URL returned: " + JSON.stringify(result));
       }
     } catch (err) {
-      console.error("Sign in error:", err);
-      const data = (err as { data?: unknown })?.data;
-      const msg = err instanceof Error ? err.message : "";
-      setError("Error: " + (msg || JSON.stringify(data) || String(err)));
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg || "Unknown error");
     } finally {
       setPending(false);
     }
@@ -68,16 +71,26 @@ function SignInPage() {
           }}
         >
           {pending && <Loader2 style={{ width: 16, height: 16, animation: "spin 1s linear infinite" }} />}
-          {pending ? "Signing in..." : "Sign in with Google"}
+          {pending ? "Getting sign-in link..." : "Sign in with Google"}
         </button>
+        {redirectUrl && (
+          <div style={{ background: "#1a1a1a", padding: "12px", borderRadius: "6px", textAlign: "left" }}>
+            <p style={{ color: "#aaa", fontSize: "12px", marginBottom: "8px" }}>
+              If you were not redirected automatically, click the link below:
+            </p>
+            <a
+              href={redirectUrl}
+              style={{ color: "#4285F4", fontSize: "13px", wordBreak: "break-all" }}
+            >
+              Continue to Google →
+            </a>
+          </div>
+        )}
         {error && (
           <p style={{ color: "red", fontSize: "13px", wordBreak: "break-word" }}>
-            Error: {error}
+            {error}
           </p>
         )}
-        <p className="text-[10px] text-sidebar-foreground/30 break-all">
-          backend: {convexUrl}
-        </p>
       </div>
     </div>
   );
