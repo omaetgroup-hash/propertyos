@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Building2 } from "lucide-react";
 
 function SignInPage() {
+  const convexUrl = import.meta.env.VITE_CONVEX_URL ?? "(not set — fallback localhost)";
   return (
     <div className="min-h-screen flex items-center justify-center bg-sidebar">
       <div className="text-center space-y-6 max-w-sm px-6">
@@ -28,6 +29,9 @@ function SignInPage() {
           </div>
         </div>
         <SignInButton className="w-full" />
+        <p className="text-[10px] text-sidebar-foreground/30 break-all">
+          backend: {convexUrl}
+        </p>
       </div>
     </div>
   );
