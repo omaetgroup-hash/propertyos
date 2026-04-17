@@ -18,14 +18,13 @@ function SignInPage() {
     setPending(true);
     try {
       const result = await signIn("google");
-      // If we get here without a page navigation, show the result
-      setError("signIn resolved without redirect: " + JSON.stringify(result));
+      if (result?.redirect) {
+        window.location.href = result.redirect.toString();
+      }
     } catch (err) {
       console.error("Sign in error:", err);
-      const msg = err instanceof Error
-        ? `${err.name}: ${err.message}`
-        : JSON.stringify(err, Object.getOwnPropertyNames(err as object));
-      setError(msg || "Unknown error (empty message)");
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg || "Sign in failed — check console for details");
     } finally {
       setPending(false);
     }

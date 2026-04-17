@@ -43,7 +43,10 @@ export const SignInButton = ({
       if (isAuthenticated) {
         await signOut();
       } else {
-        await signIn("google");
+        const result = await signIn("google");
+        if (result?.redirect) {
+          window.location.href = result.redirect.toString();
+        }
       }
     } catch (err) {
       console.error("Authentication error:", err);
