@@ -17,10 +17,15 @@ function SignInPage() {
     setError(null);
     setPending(true);
     try {
-      await signIn("google");
+      const result = await signIn("google");
+      // If we get here without a page navigation, show the result
+      setError("signIn resolved without redirect: " + JSON.stringify(result));
     } catch (err) {
       console.error("Sign in error:", err);
-      setError(err instanceof Error ? err.message : String(err));
+      const msg = err instanceof Error
+        ? `${err.name}: ${err.message}`
+        : JSON.stringify(err, Object.getOwnPropertyNames(err as object));
+      setError(msg || "Unknown error (empty message)");
     } finally {
       setPending(false);
     }
