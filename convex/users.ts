@@ -1,47 +1,42 @@
 import { query, mutation } from "./_generated/server";
+import { getAuthUserId } from "@convex-dev/auth/server";
 import { resolveUserRole } from "./roles";
 
 export const updateCurrentUser = mutation({
   args: {},
   handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
-    const role = resolveUserRole(identity.email);
-    const existing = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
+    const role = resolveUserRole(identity?.email);
+
+    const existing = await ctx.db.get(userId);
     if (existing) {
-      await ctx.db.patch(existing._id, {
-        name: identity.name,
-        email: identity.email,
+      await ctx.db.patch(userId, {
+        name: identity?.name ?? existing.name,
+        email: identity?.email ?? existing.email,
         role,
       });
-      return existing._id;
+      return userId;
     }
-    return await ctx.db.insert("users", {
-      tokenIdentifier: identity.tokenIdentifier,
-      name: identity.name,
-      email: identity.email,
-      role,
-    });
+    return null;
   },
 });
 
 export const getCurrentUser = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+
+    const user = await ctx.db.get(userId);
     if (!user) return null;
 
+    const identity = await ctx.auth.getUserIdentity();
     return {
       ...user,
-      role: resolveUserRole(identity.email ?? user.email),
+      role: resolveUserRole(identity?.email ?? user.email),
     };
   },
 });

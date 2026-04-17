@@ -16,12 +16,12 @@ export default defineSchema({
     phoneVerificationTime: v.optional(v.number()),
     isAnonymous: v.optional(v.boolean()),
     // App-specific fields
-    tokenIdentifier: v.optional(v.string()),
     role: v.optional(v.union(v.literal("admin"), v.literal("staff"))),
+    // Legacy field — kept optional for existing documents, no longer written
+    tokenIdentifier: v.optional(v.string()),
   })
     .index("email", ["email"])
-    .index("phone", ["phone"])
-    .index("by_token", ["tokenIdentifier"]),
+    .index("phone", ["phone"]),
 
   properties: defineTable({
     name: v.string(),

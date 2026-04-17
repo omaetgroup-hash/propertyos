@@ -1,7 +1,6 @@
-const DEFAULT_ADMIN_EMAIL = "tom@omaetgroup.co.nz,omaetgroup@gmail.com";
-
 export function getAdminEmails() {
-  return `${process.env.ADMIN_EMAILS ?? process.env.ADMIN_EMAIL ?? DEFAULT_ADMIN_EMAIL}`
+  const raw = process.env.ADMIN_EMAILS ?? process.env.ADMIN_EMAIL ?? "";
+  return raw
     .split(",")
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean);

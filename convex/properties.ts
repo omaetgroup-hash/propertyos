@@ -2,6 +2,7 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
 import { getCurrentUserOrNull, requireCurrentUser, requireOwnedProperty } from "./authz";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 export const list = query({
   args: {},
@@ -133,17 +134,12 @@ export const clearLocation = mutation({
 export const getDashboardStats = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
-    if (!user) return null;
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
 
     const properties = await ctx.db
       .query("properties")
-      .withIndex("by_owner", (q) => q.eq("ownerId", user._id))
+      .withIndex("by_owner", (q) => q.eq("ownerId", userId))
       .collect();
 
     const propertyIds = properties.map((p) => p._id);
@@ -179,7 +175,7 @@ export const getDashboardStats = query({
 
     const allCompliance = await ctx.db
       .query("compliance")
-      .withIndex("by_owner", (q) => q.eq("ownerId", user._id))
+      .withIndex("by_owner", (q) => q.eq("ownerId", userId))
       .collect();
     const overdueCount = allCompliance.filter(
       (c) => c.status === "overdue" || c.status === "expired"
@@ -187,7 +183,7 @@ export const getDashboardStats = query({
 
     const allInspections = await ctx.db
       .query("inspections")
-      .withIndex("by_owner", (q) => q.eq("ownerId", user._id))
+      .withIndex("by_owner", (q) => q.eq("ownerId", userId))
       .collect();
     const pendingInspectionCount = allInspections.filter((i) => i.status === "scheduled").length;
 

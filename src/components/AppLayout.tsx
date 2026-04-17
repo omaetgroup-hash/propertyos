@@ -1,42 +1,13 @@
 import { Outlet } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import AppSidebar from "@/components/AppSidebar.tsx";
 import { Authenticated, Unauthenticated, AuthLoading, useQuery, useMutation, useConvexAuth } from "convex/react";
-import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "@/convex/_generated/api.js";
+import { SignInButton } from "@/components/ui/signin.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { Building2, Loader2 } from "lucide-react";
+import { Building2 } from "lucide-react";
 
 function SignInPage() {
-  const { signIn } = useAuthActions();
-  const [pending, setPending] = useState(false);
-  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSignIn = async () => {
-    setError(null);
-    setRedirectUrl(null);
-    setPending(true);
-    try {
-      const result = await signIn("google");
-      if (result?.redirect) {
-        const url = result.redirect.toString();
-        setRedirectUrl(url);
-        // Try every navigation method available
-        try { window.location.href = url; } catch (_) {}
-        try { window.location.assign(url); } catch (_) {}
-        try { window.open(url, "_self"); } catch (_) {}
-      } else {
-        setError("No redirect URL returned: " + JSON.stringify(result));
-      }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setError(msg || "Unknown error");
-    } finally {
-      setPending(false);
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-sidebar">
       <div className="text-center space-y-6 max-w-sm px-6">
@@ -50,47 +21,13 @@ function SignInPage() {
           <p className="text-sidebar-foreground/60 text-sm leading-relaxed">
             Property management for New Zealand and Australia — residential, commercial, compliance and more.
           </p>
-        </div>
-        <button
-          onClick={handleSignIn}
-          disabled={pending}
-          style={{
-            width: "100%",
-            padding: "10px 16px",
-            background: pending ? "#555" : "#4285F4",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            fontSize: "14px",
-            fontWeight: 600,
-            cursor: pending ? "not-allowed" : "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "8px",
-          }}
-        >
-          {pending && <Loader2 style={{ width: 16, height: 16, animation: "spin 1s linear infinite" }} />}
-          {pending ? "Getting sign-in link..." : "Sign in with Google"}
-        </button>
-        {redirectUrl && (
-          <div style={{ background: "#1a1a1a", padding: "12px", borderRadius: "6px", textAlign: "left" }}>
-            <p style={{ color: "#aaa", fontSize: "12px", marginBottom: "8px" }}>
-              If you were not redirected automatically, click the link below:
-            </p>
-            <a
-              href={redirectUrl}
-              style={{ color: "#4285F4", fontSize: "13px", wordBreak: "break-all" }}
-            >
-              Continue to Google →
-            </a>
+          <div className="flex justify-center gap-2 pt-1">
+            <span className="text-xs text-sidebar-foreground/40">🇳🇿 New Zealand</span>
+            <span className="text-xs text-sidebar-foreground/40">·</span>
+            <span className="text-xs text-sidebar-foreground/40">🇦🇺 Australia</span>
           </div>
-        )}
-        {error && (
-          <p style={{ color: "red", fontSize: "13px", wordBreak: "break-word" }}>
-            {error}
-          </p>
-        )}
+        </div>
+        <SignInButton className="w-full" />
       </div>
     </div>
   );

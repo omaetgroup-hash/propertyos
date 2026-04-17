@@ -1,6 +1,7 @@
 import { ConvexError } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
+import { getAuthUserId } from "@convex-dev/auth/server";
 import { resolveUserRole } from "./roles";
 
 type AuthCtx = QueryCtx | MutationCtx;
@@ -38,39 +39,34 @@ async function requireOwnedRecord<T extends OwnedTable>(
 }
 
 export async function getCurrentUserOrNull(ctx: AuthCtx): Promise<AppUser | null> {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) return null;
+  const userId = await getAuthUserId(ctx);
+  if (!userId) return null;
 
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-    .unique();
+  const user = await ctx.db.get(userId);
   if (!user) return null;
 
+  const identity = await ctx.auth.getUserIdentity();
   return {
     ...user,
-    role: resolveUserRole(identity.email ?? user.email),
+    role: resolveUserRole(identity?.email ?? user.email),
   };
 }
 
 export async function requireCurrentUser(ctx: AuthCtx): Promise<AppUser> {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
+  const userId = await getAuthUserId(ctx);
+  if (!userId) {
     throw new ConvexError({ message: "Not authenticated", code: "UNAUTHENTICATED" });
   }
 
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-    .unique();
-
+  const user = await ctx.db.get(userId);
   if (!user) {
     throw notFound("User");
   }
 
+  const identity = await ctx.auth.getUserIdentity();
   return {
     ...user,
-    role: resolveUserRole(identity.email ?? user.email),
+    role: resolveUserRole(identity?.email ?? user.email),
   };
 }
 
