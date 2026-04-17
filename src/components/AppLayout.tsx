@@ -20,8 +20,7 @@ function SignInPage() {
       const result = await signIn("google");
       if (result?.redirect) {
         const url = result.redirect.toString();
-        setError("Redirecting to: " + url);
-        window.location.assign(url);
+        window.open(url, "_self");
       } else {
         setError("No redirect URL returned. result=" + JSON.stringify(result));
       }

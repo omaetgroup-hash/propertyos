@@ -45,7 +45,7 @@ export const SignInButton = ({
       } else {
         const result = await signIn("google");
         if (result?.redirect) {
-          window.location.href = result.redirect.toString();
+          window.open(result.redirect.toString(), "_self");
         }
       }
     } catch (err) {
