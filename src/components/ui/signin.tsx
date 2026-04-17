@@ -86,7 +86,9 @@ export const SignInButton = forwardRef<HTMLButtonElement, SignInButtonProps>(
           }
         } catch (err) {
           console.error("Authentication error:", err);
-          // Don't prevent the default here as the auth library handles errors
+          toast.error("Sign in failed", {
+            description: err instanceof Error ? err.message : String(err),
+          });
         }
       },
       [isAuthenticated, removeUser, signinRedirect, onClick],
