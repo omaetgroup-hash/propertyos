@@ -19,12 +19,17 @@ function SignInPage() {
     try {
       const result = await signIn("google");
       if (result?.redirect) {
-        window.location.href = result.redirect.toString();
+        const url = result.redirect.toString();
+        setError("Redirecting to: " + url);
+        window.location.assign(url);
+      } else {
+        setError("No redirect URL returned. result=" + JSON.stringify(result));
       }
     } catch (err) {
       console.error("Sign in error:", err);
-      const msg = err instanceof Error ? err.message : String(err);
-      setError(msg || "Sign in failed — check console for details");
+      const data = (err as { data?: unknown })?.data;
+      const msg = err instanceof Error ? err.message : "";
+      setError("Error: " + (msg || JSON.stringify(data) || String(err)));
     } finally {
       setPending(false);
     }
