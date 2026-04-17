@@ -1,14 +1,31 @@
 import { Outlet } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import AppSidebar from "@/components/AppSidebar.tsx";
 import { Authenticated, Unauthenticated, AuthLoading, useQuery, useMutation, useConvexAuth } from "convex/react";
+import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "@/convex/_generated/api.js";
-import { SignInButton } from "@/components/ui/signin.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { Building2 } from "lucide-react";
+import { Building2, Loader2 } from "lucide-react";
 
 function SignInPage() {
-  const convexUrl = import.meta.env.VITE_CONVEX_URL ?? "(not set — fallback localhost)";
+  const { signIn } = useAuthActions();
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const convexUrl = import.meta.env.VITE_CONVEX_URL ?? "(not set)";
+
+  const handleSignIn = async () => {
+    setError(null);
+    setPending(true);
+    try {
+      await signIn("google");
+    } catch (err) {
+      console.error("Sign in error:", err);
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setPending(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-sidebar">
       <div className="text-center space-y-6 max-w-sm px-6">
@@ -22,13 +39,34 @@ function SignInPage() {
           <p className="text-sidebar-foreground/60 text-sm leading-relaxed">
             Property management for New Zealand and Australia — residential, commercial, compliance and more.
           </p>
-          <div className="flex justify-center gap-2 pt-1">
-            <span className="text-xs text-sidebar-foreground/40">🇳🇿 New Zealand</span>
-            <span className="text-xs text-sidebar-foreground/40">·</span>
-            <span className="text-xs text-sidebar-foreground/40">🇦🇺 Australia</span>
-          </div>
         </div>
-        <SignInButton className="w-full" />
+        <button
+          onClick={handleSignIn}
+          disabled={pending}
+          style={{
+            width: "100%",
+            padding: "10px 16px",
+            background: pending ? "#555" : "#4285F4",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            fontSize: "14px",
+            fontWeight: 600,
+            cursor: pending ? "not-allowed" : "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
+          }}
+        >
+          {pending && <Loader2 style={{ width: 16, height: 16, animation: "spin 1s linear infinite" }} />}
+          {pending ? "Signing in..." : "Sign in with Google"}
+        </button>
+        {error && (
+          <p style={{ color: "red", fontSize: "13px", wordBreak: "break-word" }}>
+            Error: {error}
+          </p>
+        )}
         <p className="text-[10px] text-sidebar-foreground/30 break-all">
           backend: {convexUrl}
         </p>
