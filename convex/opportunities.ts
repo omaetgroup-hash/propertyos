@@ -31,6 +31,16 @@ export const create = mutation({
     name: v.string(),
     location: v.string(),
     notes: v.optional(v.string()),
+    propertyType: v.optional(v.union(
+      v.literal("accommodation"),
+      v.literal("residential"),
+      v.literal("commercial"),
+      v.literal("mixed_use")
+    )),
+    propertyStructure: v.optional(v.string()),
+    floorArea: v.optional(v.number()),
+    landArea: v.optional(v.number()),
+    yearBuilt: v.optional(v.number()),
     numberOfRooms: v.number(),
     bedsPerRoom: v.number(),
     pricingType: v.union(v.literal("nightly"), v.literal("weekly")),
@@ -62,6 +72,16 @@ export const update = mutation({
     name: v.optional(v.string()),
     location: v.optional(v.string()),
     notes: v.optional(v.string()),
+    propertyType: v.optional(v.union(
+      v.literal("accommodation"),
+      v.literal("residential"),
+      v.literal("commercial"),
+      v.literal("mixed_use")
+    )),
+    propertyStructure: v.optional(v.string()),
+    floorArea: v.optional(v.number()),
+    landArea: v.optional(v.number()),
+    yearBuilt: v.optional(v.number()),
     numberOfRooms: v.optional(v.number()),
     bedsPerRoom: v.optional(v.number()),
     pricingType: v.optional(v.union(v.literal("nightly"), v.literal("weekly"))),

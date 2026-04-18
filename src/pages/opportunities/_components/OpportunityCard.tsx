@@ -1,4 +1,5 @@
 import { useMutation } from "convex/react";
+import { useNavigate } from "react-router-dom";
 import { api } from "@/convex/_generated/api.js";
 import type { Doc, Id } from "@/convex/_generated/dataModel.d.ts";
 import { toast } from "sonner";
@@ -12,7 +13,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu.tsx";
-import { MoreHorizontal, Pencil, Trash2, Building2, MapPin } from "lucide-react";
+import { MoreHorizontal, ExternalLink, Trash2, Building2, MapPin } from "lucide-react";
 import { calculateDeal, formatCurrency, formatPercent } from "@/lib/deal-calculator.ts";
 import { cn } from "@/lib/utils.ts";
 
@@ -37,6 +38,7 @@ const viabilityDot: Record<string, string> = {
 };
 
 export default function OpportunityCard({ opportunity, onEdit }: OpportunityCardProps) {
+  const navigate = useNavigate();
   const removeOpportunity = useMutation(api.opportunities.remove);
 
   const metrics = calculateDeal({
@@ -64,7 +66,7 @@ export default function OpportunityCard({ opportunity, onEdit }: OpportunityCard
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow cursor-pointer group" onClick={() => onEdit(opportunity)}>
+    <Card className="hover:shadow-md transition-shadow cursor-pointer group" onClick={() => navigate(`/opportunities/${opportunity._id}`)}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
@@ -98,8 +100,8 @@ export default function OpportunityCard({ opportunity, onEdit }: OpportunityCard
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(opportunity); }}>
-                  <Pencil className="w-4 h-4 mr-2" /> Edit
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/opportunities/${opportunity._id}`); }}>
+                  <ExternalLink className="w-4 h-4 mr-2" /> Open
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem

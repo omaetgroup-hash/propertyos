@@ -195,6 +195,18 @@ export default defineSchema({
     name: v.string(),
     location: v.string(),
     notes: v.optional(v.string()),
+    // Property classification
+    propertyType: v.optional(v.union(
+      v.literal("accommodation"),
+      v.literal("residential"),
+      v.literal("commercial"),
+      v.literal("mixed_use")
+    )),
+    propertyStructure: v.optional(v.string()),
+    // Physical details
+    floorArea: v.optional(v.number()),
+    landArea: v.optional(v.number()),
+    yearBuilt: v.optional(v.number()),
     // Capacity
     numberOfRooms: v.number(),
     bedsPerRoom: v.number(),
